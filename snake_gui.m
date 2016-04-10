@@ -12,10 +12,13 @@ if strcmp(command_str, 'initialize')
     
     clear, close all
     
-    %% Set Initial Colors
+    %% Initial Settings
     handles.snakeColor = 'black';
     handles.pointColor = 'black';
     handles.wallColor = 'black';
+    handles.baseSpeed = .06;
+    handles.speed = .06;
+    handles.markerSize = 30;
     
     %% Create Figure
     
@@ -72,30 +75,62 @@ if strcmp(command_str, 'initialize')
     
     %% Create Themes DropDown and Text
     
-    handles.themesMenu = uicontrol(fig,   ...
-    'Style', 'popupmenu',                 ...
-    'position', [figureX/1.33 figureY-725 ...
-                  215 75],                ...
-    'String', {'Jungle'                   ...
-               'Galactic'                 ...
-               'Hello Kitty'              ...
-               'Fire'                     ...
-               'Sky'},                    ...
-    'fontsize', 12,                       ...
-    'callback', 'snake_gui(''themes'')');
+    handles.themesMenu = uicontrol(fig,       ...
+        'Style', 'popupmenu',                 ...
+        'position', [figureX/1.33 figureY-725 ...
+                      215 75],                ...
+        'String', {'Jungle'                   ...
+                   'Galactic'                 ...
+                   'Hello Kitty'              ...
+                   'Fire'                     ...
+                   'Sky'},                    ...
+        'fontsize', 12,                       ...
+        'callback', 'snake_gui(''themes'')');
     
-    themesText = uicontrol(fig,        ...
-    'Style', 'text',                           ...
-    'position', [figureX/1.33 figureY-650      ...
-                 100 30],                      ...
-    'backgroundcolor', [0.5625 0.9297 0.5625], ...
-    'String', 'Themes:',                       ...
-    'fontsize', 18);
+    themesText = uicontrol(fig,                    ...
+        'Style', 'text',                           ...
+        'position', [figureX/1.33 figureY-650      ...
+                     100 30],                      ...
+        'backgroundcolor', [0.5625 0.9297 0.5625], ...
+        'String', 'Themes:',                       ...
+        'fontsize', 18);
+
+    %% Create Difficulty Dropdown and Text
+    
+    handles.difficultyMenu = uicontrol(fig,       ...
+        'Style', 'popupmenu',                     ...
+        'position', [figureX/1.33 figureY-400     ...
+                      215 75],                    ...
+        'String', {'Slow'                         ...
+                   'Normal'                       ...
+                   'Fast'                         ...
+                   'Extreme'},                    ...
+        'Value', 2,                               ...
+        'fontsize', 12,                           ...
+        'callback', 'snake_gui(''speed'')');
+    
+    difficultyText = uicontrol(fig,                ...
+        'Style', 'text',                           ...
+        'position', [figureX/1.33 figureY-325      ...
+                     100 30],                      ...
+        'backgroundcolor', [0.5625 0.9297 0.5625], ...
+        'String', 'Difficulty:',                   ...
+        'fontsize', 18);
+
+    %% Create 'Large Board' Checkbox
+    
+    handles.largeBoard = uicontrol(fig, ...
+        'Style', 'checkbox', ...
+        'Position', [figureX/1.33 figureY-385     ...
+                     100 30], ...
+        'String', 'Large Board', ...
+        'BackgroundColor', [0.5625 0.9297 0.5625], ...
+        'fontsize', 10, ...
+        'callback', 'snake_gui(''largeBoard'')');
 
     %% Create Array of Static Texts and Color Variables
     
-    handles.staticTexts = [titleText authorText themesText];
-    
+    handles.staticTexts = [titleText authorText themesText difficultyText handles.largeBoard];
     
     %% Save handles and make GUI visible
     
@@ -105,7 +140,6 @@ if strcmp(command_str, 'initialize')
 %% Play Callback
 elseif strcmp(command_str, 'play') 
     hold on
-    handles = get(gcf, 'userdata');
     snake = [0 0];
     set(gcf,'CurrentCharacter', 'i')
     direction = 'i';
@@ -113,10 +147,9 @@ elseif strcmp(command_str, 'play')
     point = randomPoint(snake);
     while (~gameover)
         cla
-        %plot(snake(:, 1), snake(:, 2), 'ks', 'markersize', 15, 'linewidth', 2, 'color', handles.snakeColor)
-        %plot(point(1), point(2), 'ks', 'markersize', 15, 'linewidth', 2, 'color', handles.pointColor)
-        plot(snake(:, 1), snake(:, 2), 'ks', 'markersize', 30, 'linewidth', 2, 'color', handles.snakeColor)
-        plot(point(1), point(2), 'ks', 'markersize', 30, 'linewidth', 2, 'color', handles.pointColor)
+        handles = get(gcf, 'userdata');
+        plot(snake(:, 1), snake(:, 2), 'ks', 'markersize', handles.markerSize, 'linewidth', 2, 'color', handles.snakeColor)
+        plot(point(1), point(2), 'ks', 'markersize', handles.markerSize, 'linewidth', 2, 'color', handles.pointColor)
         plot([-10 10 10 -10 -10], [-10 -10 10 10 -10], 'k-', 'LineWidth', 10, 'Color', handles.wallColor)
         if checkCollision(snake, point)
             point = randomPoint(snake);
@@ -125,7 +158,7 @@ elseif strcmp(command_str, 'play')
         direction = getDirection(snake, direction);
         snake = move(snake, direction);
         gameover = gamestate(snake);
-        pause(.07)
+        pause(handles.speed)
     end
     hold off
     
@@ -179,12 +212,49 @@ elseif strcmp(command_str, 'themes')
     plot([-10 10 10 -10 -10], [-10 -10 10 10 -10], 'k-', 'LineWidth', 10, 'Color', handles.wallColor)
     set(handles.axes, 'color', axesColor)  
     set(gcf, 'userdata', handles)
+  
+%% Difficulty Menu Callback
+elseif strcmp(command_str, 'speed')
+    handles = get(gcf, 'userdata');
+    theme = get(handles.difficultyMenu, 'String');
+    theme = theme(get(handles.difficultyMenu, 'Value'));
+    
+    switch theme{1}
+        case 'Slow'
+            handles.speed = handles.baseSpeed + .02;
+        case 'Normal'
+            handles.speed = handles.baseSpeed;
+        case 'Fast'
+            handles.speed = handles.baseSpeed - .02;
+        case 'Extreme'
+            handles.speed = handles.baseSpeed - .03;
+    end
+    set(gcf, 'userdata', handles)
+    
+%% Large Board Callback
+elseif strcmp(command_str, 'largeBoard')
+    handles = get(gcf, 'userdata');
+    if get(handles.largeBoard, 'value') == 1
+        handles.baseSpeed = .04;
+        handles.markerSize = 15;
+    else
+        handles.baseSpeed = .06;
+        handles.markerSize = 30;
+    end
+    set(gcf, 'userdata', handles);
 end % End of GUI initialization and callbacks
+
 
 %%% PLAY METHODS - Helper Methods for Play Callback
 
 %% moves the snake in the given direction
 function snake = move(snake, direction)
+    handles = get(gcf, 'userdata');
+    if get(handles.largeBoard, 'Value') == 1
+        increment = .5;
+    else
+        increment = 1;
+    end
     if length(snake(:,1)) ~= 1
         for i = length(snake(:,1)):-1:2
             snake(i, 1) = snake(i-1, 1);
@@ -193,13 +263,13 @@ function snake = move(snake, direction)
     end
     switch direction 
         case 'w'
-            snake(1, 2) = snake(1, 2) + 1;
+            snake(1, 2) = snake(1, 2) + increment;
         case 'a'
-            snake(1, 1) = snake(1, 1) - 1;
+            snake(1, 1) = snake(1, 1) - increment;
         case 's'
-            snake(1, 2) = snake(1, 2) - 1;
+            snake(1, 2) = snake(1, 2) - increment;
         case 'd'
-            snake(1, 1) = snake(1, 1) + 1;
+            snake(1, 1) = snake(1, 1) + increment;
     end
 
 %% adds three blocks to the snake length
@@ -223,21 +293,24 @@ function state = gamestate(snake)
 
 %% generates a random point on the grid that is not in snake
 function point = randomPoint(snake)
-%     xValues = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 -9 -9.5 ...
-%                0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
-%     yValues = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 -9 -9.5 ...
-%                0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
-    xValues = [-1 -2 -3 -4 -5 -6 -7 -8 -9 ...
-               0 1 2 3 4 5 6 7 8 9];
-    yValues = [-1 -2 -3 -4 -5 -6 -7 -8 -9 ...
-               0 1 2 3 4 5 6 7 8 9];
-%     point(1) = xValues(randi(39));
-%     point(2) = yValues(randi(39));
-    point(1) = xValues(randi(19));
-    point(2) = yValues(randi(19));
+    handles = get(gcf, 'userdata');
+    if get(handles.largeBoard, 'Value') == 1
+        xValues = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 -9 -9.5 ...
+                   0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
+        yValues = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 -9 -9.5 ...
+                   0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
+    else
+        xValues = [-1 -2 -3 -4 -5 -6 -7 -8 -9 ...
+                   0 1 2 3 4 5 6 7 8 9];
+        yValues = [-1 -2 -3 -4 -5 -6 -7 -8 -9 ...
+                   0 1 2 3 4 5 6 7 8 9];
+    end
+
+    point(1) = xValues(randi(length(xValues)));
+    point(2) = yValues(randi(length(xValues)));
     while contains(snake, point) 
-        point(1) = xValues(randi(19));
-        point(2) = yValues(randi(19));
+        point(1) = xValues(randi(length(xValues)));
+        point(2) = yValues(randi(length(xValues)));
     end
     
 %% looks at keyboard input for the direction of the snake
