@@ -26,10 +26,11 @@ if strcmp(command_str, 'initialize')
     
     screensize = get(0, 'screensize');
     screensize = screensize(3:4);
-    figureX = 960;
-    figureY = 700;
+    figureX = 960; %% change this value to change gui size. keep same X/Y ratio
+    figureY = 700; %% change this value to change gui size. keep same X/Y ratio
     fig = figure(                                      ...
-        'position', [screensize(1)/4 screensize(2)/4   ...
+        'position', [(screensize(1)-figureX)/2         ...
+                     (screensize(2)-figureY)/2         ...
                      figureX figureY],                 ...
         'name','Snake',                                ...
         'visible', 'off',                              ...
@@ -177,7 +178,9 @@ elseif strcmp(command_str, 'play')
     direction = 'i';
     gameover = false;
     point = randomPoint(snake);
+    %time = []; % for testing loop spped
     while (~gameover)
+        %tic % for testing loop speed
         cla
         handles = get(gcf, 'userdata');
         set(handles.lengthText, 'String', num2str(length(snake(:, 1))));
@@ -195,7 +198,9 @@ elseif strcmp(command_str, 'play')
         if isempty(findall(0, 'Type', 'Figure')) % exits loop if user exits the GUI during a game
             break;
         end
+        %time(length(time)+1) = toc; % for testing loop speed
     end
+    %sum(time)/length(time) % the average time for one loop
     
 %% Themes Callback    
 elseif strcmp(command_str, 'themes')
@@ -412,5 +417,6 @@ function state = contains(snake, point)
     for i = 1:length(snake(:,1))
         if snake(i, 1) == point(1) && snake(i, 2) == point(2)
             state = true;
+            return
         end
     end
