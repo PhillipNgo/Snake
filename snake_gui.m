@@ -162,7 +162,7 @@ if strcmp(command_str, 'initialize')
     %% Create Array of Static Texts and Color Variables
     
     handles.staticTexts = [titleText authorText themesText difficultyText handles.largeBoard ...
-                           handles.lengthText lengthTitle];
+                           handles.lengthText lengthTitle handles.noWalls];
     
     %% Save handles and make GUI visible
     
