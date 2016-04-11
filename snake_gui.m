@@ -192,8 +192,10 @@ elseif strcmp(command_str, 'play')
         snake = move(snake, direction);
         gameover = gamestate(snake);
         pause(handles.speed)
+        if isempty(findall(0, 'Type', 'Figure')) % exits loop if user exits the GUI during a game
+            break;
+        end
     end
-    hold off
     
 %% Themes Callback    
 elseif strcmp(command_str, 'themes')
