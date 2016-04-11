@@ -18,7 +18,7 @@ if strcmp(command_str, 'initialize')
     handles.pointColor = 'black';
     handles.wallColor = 'black';
     handles.baseSpeed = .06;
-    handles.speed = .06;
+    handles.speed = handles.baseSpeed;
     handles.markerSize = 30;
     handles.walls = true;
     
@@ -128,15 +128,15 @@ if strcmp(command_str, 'initialize')
         'String', 'Large Board',                   ...
         'BackgroundColor', [0.5625 0.9297 0.5625], ...
         'fontsize', 10,                            ...
-        'callback', 'snake_gui(''largeBoard'')');
+        'callback', 'snake_gui(''large board'')');
     
     %% Create 'No Walls' Checkbox
     
-    handles.noWalls = uicontrol(fig,            ...
+    handles.noWalls = uicontrol(fig,               ...
         'Style', 'checkbox',                       ...
         'Position', [figureX/1.15 figureY-385      ...
                      100 30],                      ...
-        'String', 'No Walls',                   ...
+        'String', 'No Walls',                      ...
         'BackgroundColor', [0.5625 0.9297 0.5625], ...
         'fontsize', 10,                            ...
         'callback', 'snake_gui(''no walls'')');
@@ -192,7 +192,7 @@ elseif strcmp(command_str, 'play')
         snake = move(snake, direction);
         gameover = gamestate(snake);
         pause(handles.speed)
-        if isempty(findall(0, 'Type', 'Figure')) % exits loop if user exits the GUI during a game
+        if isempty(findall(0, 'Type', 'Figure')) % exits loop if user closes the GUI
             break;
         end
     end
@@ -267,7 +267,7 @@ elseif strcmp(command_str, 'speed')
     set(gcf, 'userdata', handles)
     
 %% Large Board Callback
-elseif strcmp(command_str, 'largeBoard')
+elseif strcmp(command_str, 'large board')
     handles = get(gcf, 'userdata');
     if get(handles.largeBoard, 'value') == 1
         handles.baseSpeed = .04;
@@ -304,13 +304,13 @@ function snake = move(snake, direction)
         end
     end
     switch direction 
-        case 'w'
+        case 30
             snake(1, 2) = snake(1, 2) + increment;
-        case 'a'
+        case 28
             snake(1, 1) = snake(1, 1) - increment;
-        case 's'
+        case 31
             snake(1, 2) = snake(1, 2) - increment;
-        case 'd'
+        case 29
             snake(1, 1) = snake(1, 1) + increment;
     end
     if ~handles.walls
@@ -334,14 +334,12 @@ function snake = growSnake(snake)
 
 %% checks if the snake is in contact with wall or itself
 function state = gamestate(snake)
-    handles = get(gcf, 'userdata');
     state = false;
-    if handles.walls
-        if snake(1, 2) == 10 || snake(1, 1) == 10 || ...
-           snake(1, 2) == -10 || snake(1, 1) == -10
-            state = true;
-        end
+    if snake(1, 2) == 10 || snake(1, 1) == 10 || ...
+       snake(1, 2) == -10 || snake(1, 1) == -10
+        state = true;
     end
+    
     if length(snake(:,1)) ~= 1 && ...
        contains([snake(2:length(snake(:,1)), 1) snake(2:length(snake(:,2)), 2)], [snake(1,1) snake(1,2)])
         state = true;
@@ -351,22 +349,17 @@ function state = gamestate(snake)
 function point = randomPoint(snake)
     handles = get(gcf, 'userdata');
     if get(handles.largeBoard, 'Value') == 1
-        xValues = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 -9 -9.5 ...
-                   0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
-        yValues = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 -9 -9.5 ...
-                   0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
+        values = [-.5 -1 -1.5 -2 -2.5 -3 -3.5 -4 -4.5 -5 -5.5 -6 -6.5 -7 -7.5 -8 -8.5 ...
+                   -9 -9.5 0 .5 1 1.5 2 2.5 3 3.5 4 4.5 5 5.5 6 6.5 7 7.5 8 8.5 9 9.5];
     else
-        xValues = [-1 -2 -3 -4 -5 -6 -7 -8 -9 ...
-                   0 1 2 3 4 5 6 7 8 9];
-        yValues = [-1 -2 -3 -4 -5 -6 -7 -8 -9 ...
-                   0 1 2 3 4 5 6 7 8 9];
+        values = [-1 -2 -3 -4 -5 -6 -7 -8 -9 0 1 2 3 4 5 6 7 8 9];
     end
 
-    point(1) = xValues(randi(length(xValues)));
-    point(2) = yValues(randi(length(xValues)));
+    point(1) = values(randi(length(values)));
+    point(2) = values(randi(length(values)));
     while contains(snake, point) 
-        point(1) = xValues(randi(length(xValues)));
-        point(2) = yValues(randi(length(xValues)));
+        point(1) = values(randi(length(values)));
+        point(2) = values(randi(length(values)));
     end
     
 %% looks at keyboard input for the direction of the snake
@@ -374,28 +367,19 @@ function direction = getDirection(snake, currentDirection)
     set(gcf, 'KeyPressFcn', @(x,y)get(gcf,'CurrentCharacter'))
     direction = get(gcf, 'CurrentCharacter');
     
-    switch direction 
-        case 28
-            direction = 'a';
-        case 29
-            direction = 'd';
-        case 30
-            direction = 'w';
-        case 31
-            direction = 's';
-        otherwise
-            direction = currentDirection;
+    if isempty(direction) || (direction ~= 28 && direction ~= 29 && direction ~= 30 && direction ~= 31)
+        direction = currentDirection;
     end
     
     if length(snake(:,1)) ~= 1 && direction ~= currentDirection
-        if currentDirection == 'w' && direction == 's'
-            direction = 'w';
-        elseif currentDirection == 's' && direction == 'w'
-            direction = 's';
-        elseif currentDirection == 'a' && direction == 'd'
-            direction = 'a';
-        elseif currentDirection == 'd' && direction == 'a'
-            direction = 'd';
+        if currentDirection == 30 && direction == 31
+            direction = 30;
+        elseif currentDirection == 31 && direction == 30
+            direction = 31;
+        elseif currentDirection == 28 && direction == 29
+            direction = 28;
+        elseif currentDirection == 29 && direction == 28
+            direction = 29;
         end
     end
 
